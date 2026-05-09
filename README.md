@@ -29,7 +29,8 @@ Access the course content through the website:
 │   ├── Day 1/   # CNN slides
 │   ├── Day 2/   # Augmentation & Transfer Learning slides
 │   ├── Day 3/   # Segmentation slides
-│   └── Day 4/   # Object Detection slides
+│   ├── Day 4/   # Object Detection slides
+│   └── Day 5/   # Vision Transformers slides
 ├── Labs/
 │   ├── Day 1/   # PyTorch Basics, CNNs
 │   ├── Day 2/   # Datasets, Transfer Learning
