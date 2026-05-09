@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Yaz\\\\Documents\\\\GitHub\\\\2026_Advanced_AI\\\\Summaries\" | Select-Object Name, @{Name=\"Type\";Expression={if\\($_.PSIsContainer\\){\"Folder\"}else{\"File\"}}} | Format-Table -AutoSize)"
-    ]
-  }
-}
