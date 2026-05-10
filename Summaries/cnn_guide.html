@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNN Field Guide — Fundamentals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   CNN GUIDE — SHARED STYLES
+   Professional design system
+   ============================================ */
+
+:root {
+  /* Light, professional palette */
+  --bg: #fafaf7;
+  --bg-2: #ffffff;
+  --bg-3: #f0efe9;
+  --surface: #ffffff;
+  --border: #e2e0d6;
+  --border-strong: #c9c6b8;
+  --ink: #1c1d1a;
+  --ink-2: #4a4c46;
+  --ink-3: #7a7c74;
+  --accent: #c8442a;        /* burnt orange */
+  --accent-2: #2d5d4f;      /* forest */
+  --accent-3: #1f4287;      /* deep blue */
+  --accent-4: #b88a00;      /* mustard */
+  --highlight: #fff4d6;
+  --kernel: #c8442a;
+  --output: #2d5d4f;
+  --pad: #b8a888;
+  --shadow: 0 1px 2px rgba(28,29,26,0.04), 0 4px 12px rgba(28,29,26,0.06);
+  --shadow-lg: 0 2px 4px rgba(28,29,26,0.04), 0 12px 32px rgba(28,29,26,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== NAVIGATION ===== */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(250, 250, 247, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.nav-brand-mark {
+  width: 24px;
+  height: 24px;
+  background: var(--ink);
+  color: var(--bg);
+  display: grid;
+  place-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 3px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.nav-links a {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+.nav-links a:hover {
+  background: var(--bg-3);
+  color: var(--ink);
+}
+
+.nav-links a.active {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* ===== LAYOUT ===== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 32px 80px;
+}
+
+@media (max-width: 768px) {
+  .container { padding: 32px 20px 60px; }
+  .nav-inner { padding: 12px 20px; }
+  .nav-links a { padding: 6px 10px; font-size: 11px; }
+}
+
+/* ===== HEADER ===== */
+.page-header {
+  margin-bottom: 56px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 16px;
+  display: inline-block;
+}
+
+h1 {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+  color: var(--ink);
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.subtitle {
+  font-size: 17px;
+  color: var(--ink-2);
+  max-width: 680px;
+  line-height: 1.55;
+}
+
+/* ===== SECTIONS ===== */
+section {
+  margin-bottom: 72px;
+}
+
+.section-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+  font-weight: 500;
+}
+
+h2 {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(26px, 3.5vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin-bottom: 14px;
+  color: var(--ink);
+}
+
+h2 em {
+  font-style: italic;
+  color: var(--accent-2);
+  font-weight: 500;
+}
+
+h3 {
+  font-family: 'IBM Plex Serif', Georgia, serif;
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+
+.lede {
+  font-size: 16.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+  max-width: 760px;
+  margin-bottom: 28px;
+}
+
+.lede strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+p { color: var(--ink-2); }
+
+/* ===== DEMO CARD ===== */
+.demo {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+
+.demo-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.demo-label::before {
+  content: "";
+  width: 16px;
+  height: 1px;
+  background: var(--ink-3);
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .demo-grid { grid-template-columns: 1fr; gap: 28px; }
+  .demo { padding: 24px; }
+}
+
+.canvas-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-3);
+  border-radius: 8px;
+  padding: 24px 16px;
+  border: 1px solid var(--border);
+}
+
+.canvas-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+svg { display: block; max-width: 100%; height: auto; }
+
+/* ===== CONTROLS ===== */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.control { display: flex; flex-direction: column; gap: 10px; }
+
+.control-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.control-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.control-value {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Stepped slider with tick marks */
+.slider-wrap {
+  position: relative;
+  padding: 0 0 18px;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 4px rgba(200,68,42,0.35);
+  transition: transform 0.12s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--surface);
+  box-shadow: 0 1px 4px rgba(200,68,42,0.35);
+}
+
+.tick-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.tick-row span {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+
+.tick-row span::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 1px;
+  height: 4px;
+  background: var(--border-strong);
+  transform: translateX(-50%);
+}
+
+/* ===== BUTTONS ===== */
+.btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+button:hover {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+button.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+button.primary:hover {
+  background: #a83820;
+  border-color: #a83820;
+}
+
+button.active {
+  background: var(--accent-2);
+  color: white;
+  border-color: var(--accent-2);
+}
+
+/* ===== EQUATION ===== */
+.equation {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  padding: 14px 18px;
+  margin: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  text-align: center;
+  color: var(--ink);
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
+.equation .out { color: var(--accent); font-weight: 600; }
+.equation .var { color: var(--accent-3); font-weight: 600; }
+
+/* ===== STATUS ===== */
+.status {
+  background: var(--ink);
+  color: #e8e7e0;
+  padding: 12px 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  border-radius: 6px;
+  line-height: 1.7;
+}
+
+.status .key { color: var(--accent-4); font-weight: 600; }
+.status .calc { color: #fff4d6; font-weight: 500; }
+
+.pulse-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin-right: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ===== KERNEL EDITOR ===== */
+.kernel-editor {
+  display: grid;
+  grid-template-columns: repeat(3, 48px);
+  gap: 4px;
+  justify-content: center;
+  margin: 14px 0;
+}
+.kernel-editor input {
+  width: 48px;
+  height: 48px;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--ink);
+  outline: none;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.kernel-editor input:focus {
+  border-color: var(--accent);
+  background: var(--highlight);
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+}
+.preset-grid button { font-size: 10px; padding: 8px 6px; }
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  background: var(--bg-3);
+  padding: 4px;
+  border-radius: 8px;
+}
+.tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+.tab:hover { color: var(--ink); background: transparent; }
+.tab.active {
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+/* ===== LEGEND ===== */
+.legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.legend-item { display: flex; align-items: center; gap: 8px; }
+.legend-swatch {
+  width: 14px; height: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+}
+
+/* ===== INDEX / TOC ===== */
+.toc {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 64px;
+}
+.toc a {
+  display: block;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+.toc a:hover {
+  border-color: var(--ink);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.toc a .t-num {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.toc a .t-title {
+  font-family: 'IBM Plex Serif', serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+.toc a .t-desc {
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+
+/* ===== CELL TEXT (SVG) ===== */
+.cell-text {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--ink);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+/* ===== ARCH PAGES ===== */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 24px 0 32px;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+.stat-value {
+  font-family: 'IBM Plex Serif', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.stat-value .unit {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.layer-info {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-top: 16px;
+  min-height: 130px;
+}
+.layer-info-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.layer-info-name {
+  font-family: 'IBM Plex Serif', serif;
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.layer-info-desc {
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.55;
+}
+.layer-info-stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  flex-wrap: wrap;
+}
+.layer-info-stats span strong { color: var(--accent-2); font-weight: 600; }
+
+/* ===== INFO CALLOUTS ===== */
+.callout {
+  background: var(--bg-3);
+  border-left: 3px solid var(--accent-2);
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  margin: 20px 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.callout strong { color: var(--ink); font-weight: 600; }
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 20px 0;
+}
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 22px;
+}
+.info-card h3 {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+.info-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* ===== FOOTER ===== */
+footer {
+  border-top: 1px solid var(--border);
+  padding-top: 28px;
+  margin-top: 64px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.italic-note {
+  font-family: 'IBM Plex Serif', serif;
+  font-style: italic;
+  font-size: 14.5px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <span class="nav-brand-mark">CNN</span>
+      <span>Field Guide</span>
+    </a>
+    <div class="nav-links">
+      <a href="#conv">Convolution</a>
+      <a href="#kernel">Kernel</a>
+      <a href="#stride">Stride &amp; Padding</a>
+      <a href="#pool">Pooling</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <span class="eyebrow">A visual guide</span>
+    <h1>How <em>convolutions</em> see.</h1>
+    <p class="subtitle">A hands-on tour through the operations that let machines see — convolutions, kernels, strides, padding, and pooling, made visible. Drag, click, and step through every operation.</p>
+  </header>
+
+  <!-- TOC -->
+  <nav class="toc">
+    <a href="#conv">
+      <span class="t-num">§ 01</span>
+      <div class="t-title">The Convolution</div>
+      <div class="t-desc">A kernel slides across an input, multiplying and summing.</div>
+    </a>
+    <a href="#kernel">
+      <span class="t-num">§ 02</span>
+      <div class="t-title">The Kernel</div>
+      <div class="t-desc">Tiny weight grids that detect edges, blurs, and textures.</div>
+    </a>
+    <a href="#stride">
+      <span class="t-num">§ 03</span>
+      <div class="t-title">Stride &amp; Padding</div>
+      <div class="t-desc">Geometry of the output: speed and shape control.</div>
+    </a>
+    <a href="#pool">
+      <span class="t-num">§ 04</span>
+      <div class="t-title">Pooling</div>
+      <div class="t-desc">Compress feature maps with max or average.</div>
+    </a>
+  </nav>
+
+  <!-- §1 CONVOLUTION -->
+  <section id="conv">
+    <span class="section-num">§ 01 — Foundation</span>
+    <h2>What is a <em>convolution</em>, really?</h2>
+    <p class="lede">A convolution slides a small grid — the <strong>kernel</strong> — across a larger grid (your image), multiplying overlapping cells and summing the result. Each sum becomes one pixel of the output. Press <strong>Step</strong> to watch the kernel walk.</p>
+
+    <div class="demo">
+      <div class="demo-label">Demo 01 · Sliding Window</div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#fff"></div>Input</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(200,68,42,0.35)"></div>Kernel position</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(45,93,79,0.4)"></div>Output cell</div>
+      </div>
+
+      <div class="demo-grid">
+        <div class="canvas-wrap">
+          <svg id="conv-svg" viewBox="0 0 480 280"></svg>
+          <div class="canvas-label">Input · Kernel · Output</div>
+        </div>
+
+        <div class="controls">
+          <div class="equation">
+            output[i,j] = <span class="out">Σ</span> input[i+k, j+l] · kernel[k,l]
+          </div>
+
+          <div class="btn-row">
+            <button class="primary" id="conv-step">▸ Step</button>
+            <button id="conv-play">▶ Auto-play</button>
+            <button id="conv-reset">↻ Reset</button>
+          </div>
+
+          <div class="status" id="conv-status">
+            <span class="pulse-dot"></span>Position <span class="key">(0,0)</span> — click Step to begin.
+          </div>
+
+          <p class="italic-note">
+            A <strong>5×5 input</strong> with a <strong>3×3 kernel</strong> produces a <strong>3×3 output</strong>. The shape shrinks — that's where padding comes in.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §2 KERNEL -->
+  <section id="kernel">
+    <span class="section-num">§ 02 — The Operator</span>
+    <h2>Kernels are <em>tiny instruction sets</em>.</h2>
+    <p class="lede">The numbers inside the kernel decide what the convolution detects: <strong>edges, blurs, sharpens, embosses</strong>. Edit the 3×3 grid below or pick a preset to see how a real image of a cat transforms under different operators.</p>
+
+    <div class="demo">
+      <div class="demo-label">Demo 02 · Kernel Workshop</div>
+
+      <div class="demo-grid">
+        <div class="canvas-wrap">
+          <svg id="kernel-svg" viewBox="0 0 480 240"></svg>
+          <div class="canvas-label">Original · Filtered output</div>
+        </div>
+
+        <div class="controls">
+          <div>
+            <div class="control-header">
+              <span class="control-label">Edit kernel weights</span>
+              <span class="control-value" id="kernel-name">Identity</span>
+            </div>
+            <div class="kernel-editor" id="kernel-editor"></div>
+            <div class="preset-grid">
+              <button data-preset="identity">Identity</button>
+              <button data-preset="edge">Edge Detect</button>
+              <button data-preset="sharpen">Sharpen</button>
+              <button data-preset="blur">Blur</button>
+              <button data-preset="emboss">Emboss</button>
+              <button data-preset="sobel-x">Sobel-X</button>
+              <button data-preset="sobel-y">Sobel-Y</button>
+              <button data-preset="outline">Outline</button>
+              <button data-preset="laplace">Laplacian</button>
+            </div>
+          </div>
+
+          <div class="callout">
+            <strong>Edge detection</strong> uses a kernel where the center is positive and surroundings are negative — when neighbors disagree (an edge!), the result is large. <strong>Blur</strong> averages neighbors. <strong>Sharpen</strong> amplifies the center against its surroundings.
+          </div>
+
+          <p class="italic-note">In a real CNN, these weights aren't hand-designed — they're <strong>learned</strong> from data through gradient descent.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §3 STRIDE & PADDING -->
+  <section id="stride">
+    <span class="section-num">§ 03 — Geometry</span>
+    <h2>Stride controls <em>speed</em>. Padding controls <em>shape</em>.</h2>
+    <p class="lede"><strong>Stride</strong> is how many cells the kernel jumps each step — bigger strides skip pixels and shrink output faster. <strong>Padding</strong> wraps the input in zeros so the kernel can reach edge pixels and the output stays the same size.</p>
+
+    <div class="demo">
+      <div class="demo-label">Demo 03 · Geometry Lab</div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#fff"></div>Input</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(184,168,136,0.45)"></div>Padding (zeros)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(200,68,42,0.4)"></div>Kernel</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(45,93,79,0.4)"></div>Output</div>
+      </div>
+
+      <div class="demo-grid">
+        <div class="canvas-wrap">
+          <svg id="stride-svg" viewBox="0 0 480 340"></svg>
+          <div class="canvas-label">Input (padded) · Output</div>
+        </div>
+
+        <div class="controls">
+          <div class="control">
+            <div class="control-header">
+              <span class="control-label">Input size N</span>
+              <span class="control-value"><span id="ns-val">8</span>×<span id="ns-val2">8</span></span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="ns-slider" min="5" max="10" step="1" value="8">
+              <div class="tick-row">
+                <span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="control">
+            <div class="control-header">
+              <span class="control-label">Kernel size K</span>
+              <span class="control-value"><span id="ks-val">3</span>×<span id="ks-val2">3</span></span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="ks-slider" min="1" max="7" step="2" value="3">
+              <div class="tick-row">
+                <span>1</span><span>3</span><span>5</span><span>7</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="control">
+            <div class="control-header">
+              <span class="control-label">Stride S</span>
+              <span class="control-value" id="st-val">1</span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="st-slider" min="1" max="4" step="1" value="1">
+              <div class="tick-row">
+                <span>1</span><span>2</span><span>3</span><span>4</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="control">
+            <div class="control-header">
+              <span class="control-label">Padding P</span>
+              <span class="control-value" id="pd-val">0</span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="pd-slider" min="0" max="4" step="1" value="0">
+              <div class="tick-row">
+                <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="equation">
+            <span class="out">output</span> = ⌊(<span class="var">N</span> + 2<span class="var">P</span> − <span class="var">K</span>) / <span class="var">S</span>⌋ + 1
+          </div>
+
+          <div class="status" id="stride-status">
+            <span class="pulse-dot"></span><span class="key">N</span>=8 <span class="key">K</span>=3 <span class="key">P</span>=0 <span class="key">S</span>=1
+            → output = <span class="calc">6×6</span>
+          </div>
+
+          <div class="btn-row">
+            <button id="stride-animate">▶ Animate sweep</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §4 POOLING -->
+  <section id="pool">
+    <span class="section-num">§ 04 — Downsampling</span>
+    <h2>Pooling <em>compresses</em> what matters.</h2>
+    <p class="lede">After convolution, feature maps are still large. <strong>Pooling</strong> shrinks them by replacing each window with a single number — either the <strong>max</strong> (preserve strongest signal) or the <strong>average</strong> (preserve overall energy). It also makes the network slightly translation-invariant.</p>
+
+    <div class="demo">
+      <div class="demo-label">Demo 04 · Pooling Comparison</div>
+
+      <div class="tabs">
+        <button class="tab active" data-pool="max">Max Pooling</button>
+        <button class="tab" data-pool="avg">Average Pooling</button>
+      </div>
+
+      <div class="demo-grid">
+        <div class="canvas-wrap">
+          <svg id="pool-svg" viewBox="0 0 480 280"></svg>
+          <div class="canvas-label" id="pool-label">Input · Max-pooled output</div>
+        </div>
+
+        <div class="controls">
+          <div class="control">
+            <div class="control-header">
+              <span class="control-label">Window size</span>
+              <span class="control-value"><span id="pw-val">2</span>×<span id="pw-val2">2</span></span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="pw-slider" min="2" max="4" step="1" value="2">
+              <div class="tick-row">
+                <span>2</span><span>3</span><span>4</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="control">
+            <div class="control-header">
+              <span class="control-label">Pool stride</span>
+              <span class="control-value" id="ps-val">2</span>
+            </div>
+            <div class="slider-wrap">
+              <input type="range" id="ps-slider" min="1" max="4" step="1" value="2">
+              <div class="tick-row">
+                <span>1</span><span>2</span><span>3</span><span>4</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="equation" id="pool-eq">
+            <span class="out">max</span>-pool: output[i,j] = max over window
+          </div>
+
+          <div class="btn-row">
+            <button class="primary" id="pool-step">▸ Step</button>
+            <button id="pool-play">▶ Auto-play</button>
+            <button id="pool-reset">↻ Reset</button>
+            <button id="pool-randomize">⟳ New input</button>
+          </div>
+
+          <div class="status" id="pool-status">
+            <span class="pulse-dot"></span>Window <span class="key">(0,0)</span> — Click Step.
+          </div>
+
+          <div class="callout">
+            <strong>Max pooling</strong> is the favorite for sharp features — it keeps the strongest activation and discards the rest. <strong>Average pooling</strong> smooths and is gentler on small variations.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>CNN Field Guide</div>
+    <div>Convolutions · Kernels · Stride &amp; Padding · Pooling</div>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================
+   CNN GUIDE — FUNDAMENTALS JS
+   ============================================ */
+
+// ---- shared helpers ----
+const ns = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(ns, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+/* ============================================
+   CAT FACE IMAGE DATA (32x32 grayscale)
+   ============================================ */
+const CAT_IMAGE = [
+  [240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,100,240,240,240,240,240,240,240,240,240,240,240,240,240,240,100,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,100,100,240,240,240,240,240,240,240,240,240,240,240,240,100,100,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,100,100,100,240,240,240,240,240,240,240,240,240,240,240,240,100,100,100,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,100,100,170,100,240,240,240,240,240,240,240,240,240,240,100,170,100,100,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,100,100,170,100,240,240,130,130,130,130,130,130,240,240,100,170,100,100,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,100,100,170,170,170,100,130,130,130,130,130,130,130,130,100,170,170,170,100,100,240,240,240,240,240,240],
+  [240,240,240,240,240,240,100,100,170,170,170,100,130,130,130,130,130,130,130,130,100,170,170,170,100,100,240,240,240,240,240,240],
+  [240,240,240,240,240,100,100,170,170,170,170,170,100,130,130,130,130,130,130,100,170,170,170,170,170,100,100,240,240,240,240,240],
+  [240,240,240,240,240,100,240,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,240,100,240,240,240,240,240],
+  [240,240,240,240,240,240,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,240,240,240,240,240,240],
+  [240,240,240,240,240,240,130,130,130,130,240,240,240,130,130,130,130,130,130,240,240,240,130,130,130,130,240,240,240,240,240,240],
+  [240,240,240,240,240,130,130,130,130,240,240,20,240,240,130,130,130,130,240,240,20,240,240,130,130,130,130,240,240,240,240,240],
+  [240,240,240,240,240,130,130,130,130,240,20,20,20,240,130,130,130,130,240,20,20,20,240,130,130,130,130,240,240,240,240,240],
+  [240,240,240,240,240,130,130,130,130,240,240,20,240,240,130,130,130,130,240,240,20,240,240,130,130,130,130,240,240,240,240,240],
+  [240,240,240,240,240,130,130,130,130,130,240,240,240,130,130,130,130,130,130,240,240,240,130,130,130,130,130,240,240,240,240,240],
+  [240,240,240,240,240,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,240,240,240,240,240],
+  [240,240,240,80,80,80,130,130,130,130,130,130,130,130,130,40,40,130,130,130,130,130,130,130,130,130,80,80,80,240,240,240],
+  [240,240,240,240,240,130,80,80,80,130,130,130,130,130,130,40,130,130,130,130,130,130,130,80,80,80,130,240,240,240,240,240],
+  [240,240,240,80,80,80,80,80,80,130,130,130,130,130,130,60,60,130,130,130,130,130,130,80,80,80,80,80,80,240,240,240],
+  [240,240,240,240,240,240,130,130,130,130,130,130,130,130,60,130,130,60,130,130,130,130,130,130,130,130,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,130,130,130,130,130,130,60,130,130,130,130,60,130,130,130,130,130,130,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,240,130,130,130,130,130,130,130,130,130,130,130,130,130,130,240,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,240,240,130,130,130,130,130,130,130,130,130,130,130,130,240,240,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,240,240,240,240,240,130,130,130,130,130,130,240,240,240,240,240,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240],
+  [240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240,240],
+];
+const IMAGE_SIZE = 32;
+
+/* ============================================
+   §1 CONVOLUTION
+   ============================================ */
+(() => {
+  const svg = document.getElementById('conv-svg');
+  if (!svg) return;
+  const status = document.getElementById('conv-status');
+
+  const inputData = [
+    [3,1,2,0,1],
+    [0,2,1,3,2],
+    [1,3,2,1,0],
+    [2,0,1,2,3],
+    [1,2,3,0,1]
+  ];
+  const kernel = [
+    [1,0,-1],
+    [1,0,-1],
+    [1,0,-1]
+  ];
+  const N = 5, K = 3, OUT = N - K + 1;
+  const cell = 32;
+  const inputX = 10, inputY = 60;
+  const kernelX = 200, kernelY = 90;
+  const outputX = 340, outputY = 75;
+
+  let pos = { i: 0, j: 0 };
+  let output = Array.from({length: OUT}, () => Array(OUT).fill(null));
+  let playing = null;
+
+  function render() {
+    clear(svg);
+    el('text', { x: inputX + (N*cell)/2, y: 38, class: 'cell-text', 'font-size': 10, fill: '#7a7c74' }, svg).textContent = 'INPUT 5×5';
+    el('text', { x: kernelX + (K*cell)/2, y: 70, class: 'cell-text', 'font-size': 10, fill: '#7a7c74' }, svg).textContent = 'KERNEL 3×3';
+    el('text', { x: outputX + (OUT*cell)/2, y: 55, class: 'cell-text', 'font-size': 10, fill: '#7a7c74' }, svg).textContent = 'OUTPUT 3×3';
+
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N; j++) {
+        const inWindow = i >= pos.i && i < pos.i + K && j >= pos.j && j < pos.j + K;
+        el('rect', {
+          x: inputX + j * cell, y: inputY + i * cell,
+          width: cell, height: cell,
+          fill: inWindow ? 'rgba(200,68,42,0.28)' : '#ffffff',
+          stroke: '#c9c6b8', 'stroke-width': 1, rx: 2
+        }, svg);
+        el('text', {
+          x: inputX + j * cell + cell/2, y: inputY + i * cell + cell/2,
+          class: 'cell-text'
+        }, svg).textContent = inputData[i][j];
+      }
+    }
+
+    for (let i = 0; i < K; i++) {
+      for (let j = 0; j < K; j++) {
+        el('rect', {
+          x: kernelX + j * cell, y: kernelY + i * cell,
+          width: cell, height: cell,
+          fill: 'rgba(200,68,42,0.12)',
+          stroke: '#c8442a', 'stroke-width': 1.5, rx: 2
+        }, svg);
+        el('text', {
+          x: kernelX + j * cell + cell/2, y: kernelY + i * cell + cell/2,
+          class: 'cell-text', fill: '#c8442a'
+        }, svg).textContent = kernel[i][j];
+      }
+    }
+
+    for (let i = 0; i < OUT; i++) {
+      for (let j = 0; j < OUT; j++) {
+        const isCurrent = i === pos.i && j === pos.j;
+        const filled = output[i][j] !== null;
+        el('rect', {
+          x: outputX + j * cell, y: outputY + i * cell,
+          width: cell, height: cell,
+          fill: isCurrent ? 'rgba(45,93,79,0.55)' : (filled ? 'rgba(45,93,79,0.2)' : '#ffffff'),
+          stroke: '#c9c6b8', 'stroke-width': 1, rx: 2
+        }, svg);
+        if (filled) {
+          el('text', {
+            x: outputX + j * cell + cell/2, y: outputY + i * cell + cell/2,
+            class: 'cell-text', fill: '#2d5d4f'
+          }, svg).textContent = output[i][j];
+        }
+      }
+    }
+
+    el('path', {
+      d: `M ${inputX + N*cell + 5} ${inputY + (N*cell)/2} L ${kernelX - 5} ${kernelY + (K*cell)/2}`,
+      stroke: '#7a7c74', 'stroke-width': 1, fill: 'none', 'stroke-dasharray': '3,3'
+    }, svg);
+    el('path', {
+      d: `M ${kernelX + K*cell + 5} ${kernelY + (K*cell)/2} L ${outputX - 5} ${outputY + (OUT*cell)/2}`,
+      stroke: '#7a7c74', 'stroke-width': 1, fill: 'none', 'stroke-dasharray': '3,3'
+    }, svg);
+  }
+
+  function compute(i, j) {
+    let sum = 0;
+    for (let ki = 0; ki < K; ki++) for (let kj = 0; kj < K; kj++) {
+      sum += inputData[i+ki][j+kj] * kernel[ki][kj];
+    }
+    return sum;
+  }
+
+  function step() {
+    const val = compute(pos.i, pos.j);
+    output[pos.i][pos.j] = val;
+    status.innerHTML = `<span class="pulse-dot"></span>Position <span class="key">(${pos.i},${pos.j})</span> · <span class="calc">Σ(input × kernel) = ${val}</span>`;
+    pos.j++;
+    if (pos.j >= OUT) { pos.j = 0; pos.i++; }
+    if (pos.i >= OUT) {
+      pos.i = 0;
+      if (playing) { clearInterval(playing); playing = null; document.getElementById('conv-play').textContent = '▶ Auto-play'; }
+    }
+    render();
+  }
+
+  function reset() {
+    pos = { i: 0, j: 0 };
+    output = Array.from({length: OUT}, () => Array(OUT).fill(null));
+    if (playing) { clearInterval(playing); playing = null; document.getElementById('conv-play').textContent = '▶ Auto-play'; }
+    status.innerHTML = `<span class="pulse-dot"></span>Position <span class="key">(0,0)</span> — click Step to begin.`;
+    render();
+  }
+
+  document.getElementById('conv-step').onclick = step;
+  document.getElementById('conv-reset').onclick = reset;
+  document.getElementById('conv-play').onclick = () => {
+    if (playing) {
+      clearInterval(playing); playing = null;
+      document.getElementById('conv-play').textContent = '▶ Auto-play';
+    } else {
+      document.getElementById('conv-play').textContent = '⏸ Pause';
+      playing = setInterval(step, 500);
+    }
+  };
+
+  render();
+})();
+
+/* ============================================
+   §2 KERNEL WORKSHOP - with cat image
+   ============================================ */
+(() => {
+  const svg = document.getElementById('kernel-svg');
+  if (!svg) return;
+  const editor = document.getElementById('kernel-editor');
+  const nameEl = document.getElementById('kernel-name');
+
+  const presets = {
+    identity: { name: 'Identity', m: [[0,0,0],[0,1,0],[0,0,0]], normalize: false },
+    edge:     { name: 'Edge Detect', m: [[-1,-1,-1],[-1,8,-1],[-1,-1,-1]], normalize: false },
+    sharpen:  { name: 'Sharpen', m: [[0,-1,0],[-1,5,-1],[0,-1,0]], normalize: false },
+    blur:     { name: 'Box Blur', m: [[1,1,1],[1,1,1],[1,1,1]], normalize: true },
+    emboss:   { name: 'Emboss', m: [[-2,-1,0],[-1,1,1],[0,1,2]], normalize: false },
+    'sobel-x':{ name: 'Sobel X (vertical edges)', m: [[-1,0,1],[-2,0,2],[-1,0,1]], normalize: false },
+    'sobel-y':{ name: 'Sobel Y (horizontal edges)', m: [[-1,-2,-1],[0,0,0],[1,2,1]], normalize: false },
+    outline:  { name: 'Outline', m: [[-1,-1,-1],[-1,8,-1],[-1,-1,-1]], normalize: false },
+    laplace:  { name: 'Laplacian', m: [[0,1,0],[1,-4,1],[0,1,0]], normalize: false }
+  };
+
+  let kernel = presets.identity.m.map(r => [...r]);
+  let normalize = false;
+
+  function applyKernel(img, k, doNorm) {
+    const N = img.length, K = k.length;
+    const OUT = N - K + 1;
+    const out = [];
+    let total = 0;
+    for (let i = 0; i < K; i++) for (let j = 0; j < K; j++) total += k[i][j];
+    const norm = (doNorm && total !== 0) ? total : 1;
+    for (let i = 0; i < OUT; i++) {
+      const row = [];
+      for (let j = 0; j < OUT; j++) {
+        let s = 0;
+        for (let ki = 0; ki < K; ki++) for (let kj = 0; kj < K; kj++) {
+          s += img[i+ki][j+kj] * k[ki][kj];
+        }
+        row.push(s / norm);
+      }
+      out.push(row);
+    }
+    return out;
+  }
+
+  function normalizeOutput(arr) {
+    let mn = Infinity, mx = -Infinity;
+    for (const r of arr) for (const v of r) { mn = Math.min(mn, v); mx = Math.max(mx, v); }
+    const range = mx - mn || 1;
+    return arr.map(r => r.map(v => Math.round((v - mn) / range * 255)));
+  }
+
+  function render() {
+    clear(svg);
+    const cellSize = 6;
+    const padX = 30, padY = 30;
+    const N = IMAGE_SIZE;
+
+    el('text', { x: padX + (N*cellSize)/2, y: 18, class: 'cell-text', 'font-size': 10, fill: '#7a7c74' }, svg).textContent = 'ORIGINAL';
+
+    // Original (cat image)
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N; j++) {
+        const v = CAT_IMAGE[i][j];
+        el('rect', {
+          x: padX + j*cellSize, y: padY + i*cellSize,
+          width: cellSize, height: cellSize,
+          fill: `rgb(${v},${v},${v})`
+        }, svg);
+      }
+    }
+    // border around original
+    el('rect', { x: padX, y: padY, width: N*cellSize, height: N*cellSize, fill: 'none', stroke: '#c9c6b8', 'stroke-width': 1 }, svg);
+
+    // Filtered
+    const filtered = normalizeOutput(applyKernel(CAT_IMAGE, kernel, normalize));
+    const FOUT = filtered.length;
+    const fX = padX + N*cellSize + 70;
+    el('text', { x: fX + (FOUT*cellSize)/2, y: 18, class: 'cell-text', 'font-size': 10, fill: '#7a7c74' }, svg).textContent = 'FILTERED';
+    for (let i = 0; i < FOUT; i++) {
+      for (let j = 0; j < FOUT; j++) {
+        const v = filtered[i][j];
+        el('rect', {
+          x: fX + j*cellSize, y: padY + i*cellSize,
+          width: cellSize, height: cellSize,
+          fill: `rgb(${v},${v},${v})`
+        }, svg);
+      }
+    }
+    el('rect', { x: fX, y: padY, width: FOUT*cellSize, height: FOUT*cellSize, fill: 'none', stroke: '#c9c6b8', 'stroke-width': 1 }, svg);
+
+    // arrow
+    const arrowY = padY + (N*cellSize)/2;
+    el('path', {
+      d: `M ${padX + N*cellSize + 10} ${arrowY} L ${fX - 10} ${arrowY}`,
+      stroke: '#c8442a', 'stroke-width': 1.5, fill: 'none'
+    }, svg);
+    el('path', {
+      d: `M ${fX - 14} ${arrowY - 4} L ${fX - 8} ${arrowY} L ${fX - 14} ${arrowY + 4}`,
+      stroke: '#c8442a', 'stroke-width': 1.5, fill: 'none'
+    }, svg);
+  }
+
+  function buildEditor() {
+    editor.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.value = kernel[i][j];
+        inp.dataset.i = i;
+        inp.dataset.j = j;
+        inp.oninput = () => {
+          kernel[i][j] = parseFloat(inp.value) || 0;
+          nameEl.textContent = 'Custom';
+          render();
+        };
+        editor.appendChild(inp);
+      }
+    }
+  }
+
+  document.querySelectorAll('[data-preset]').forEach(btn => {
+    btn.onclick = () => {
+      const p = presets[btn.dataset.preset];
+      kernel = p.m.map(r => [...r]);
+      normalize = p.normalize;
+      nameEl.textContent = p.name;
+      buildEditor();
+      render();
+    };
+  });
+
+  buildEditor();
+  render();
+})();
+
+/* ============================================
+   §3 STRIDE & PADDING
+   ============================================ */
+(() => {
+  const svg = document.getElementById('stride-svg');
+  if (!svg) return;
+  const status = document.getElementById('stride-status');
+
+  let N = 8, K = 3, S = 1, P = 0;
+  let animPos = null;
+  let animTimer = null;
+
+  function readSliders() {
+    N = parseInt(document.getElementById('ns-slider').value);
+    K = parseInt(document.getElementById('ks-slider').value);
+    S = parseInt(document.getElementById('st-slider').value);
+    P = parseInt(document.getElementById('pd-slider').value);
+    document.getElementById('ns-val').textContent = N;
+    document.getElementById('ns-val2').textContent = N;
+    document.getElementById('ks-val').textContent = K;
+    document.getElementById('ks-val2').textContent = K;
+    document.getElementById('st-val').textContent = S;
+    document.getElementById('pd-val').textContent = P;
+  }
+
+  function update() {
+    readSliders();
+    const padded = N + 2*P;
+    const out = Math.floor((N + 2*P - K) / S) + 1;
+    const valid = out > 0;
+
+    status.innerHTML = `<span class="pulse-dot"></span><span class="key">N</span>=${N} <span class="key">K</span>=${K} <span class="key">P</span>=${P} <span class="key">S</span>=${S} → output = <span class="calc">${valid ? out + '×' + out : 'invalid'}</span>`;
+
+    render(out, padded);
+  }
+
+  function render(out, padded) {
+    clear(svg);
+    const maxSize = 200;
+    const cellIn = Math.min(22, maxSize / padded);
+    const cellOut = Math.min(28, maxSize / Math.max(out, 1));
+
+    const inX = 20, inY = 60;
+    const outX = 320, outY = 60 + ((padded*cellIn) - (out*cellOut))/2;
+
+    el('text', { x: inX + (padded*cellIn)/2, y: 36, class: 'cell-text', 'font-size': 10, fill: '#7a7c74' }, svg).textContent = `INPUT ${padded}×${padded}`;
+    el('text', { x: outX + (out*cellOut)/2, y: outY - 10, class: 'cell-text', 'font-size': 10, fill: '#7a7c74' }, svg).textContent = `OUTPUT ${out}×${out}`;
+
+    for (let i = 0; i < padded; i++) {
+      for (let j = 0; j < padded; j++) {
+        const isPad = i < P || i >= P + N || j < P || j >= P + N;
+        let inWindow = false;
+        if (animPos) {
+          inWindow = i >= animPos.i && i < animPos.i + K && j >= animPos.j && j < animPos.j + K;
+        }
+        el('rect', {
+          x: inX + j*cellIn, y: inY + i*cellIn,
+          width: cellIn, height: cellIn,
+          fill: inWindow ? 'rgba(200,68,42,0.45)' : (isPad ? 'rgba(184,168,136,0.4)' : '#ffffff'),
+          stroke: '#c9c6b8', 'stroke-width': 0.5
+        }, svg);
+        if (isPad && cellIn >= 16) {
+          el('text', {
+            x: inX + j*cellIn + cellIn/2, y: inY + i*cellIn + cellIn/2,
+            class: 'cell-text', 'font-size': 9, fill: '#7a7c74'
+          }, svg).textContent = '0';
+        }
+      }
+    }
+
+    for (let i = 0; i < out; i++) {
+      for (let j = 0; j < out; j++) {
+        const isCurrent = animPos && i === animPos.outI && j === animPos.outJ;
+        el('rect', {
+          x: outX + j*cellOut, y: outY + i*cellOut,
+          width: cellOut, height: cellOut,
+          fill: isCurrent ? 'rgba(45,93,79,0.6)' : 'rgba(45,93,79,0.18)',
+          stroke: '#c9c6b8', 'stroke-width': 0.5
+        }, svg);
+      }
+    }
+
+    el('path', {
+      d: `M ${inX + padded*cellIn + 8} ${inY + (padded*cellIn)/2} L ${outX - 8} ${outY + (out*cellOut)/2}`,
+      stroke: '#c8442a', 'stroke-width': 1.5, fill: 'none', 'stroke-dasharray': '4,3'
+    }, svg);
+  }
+
+  function animate() {
+    if (animTimer) {
+      clearInterval(animTimer); animTimer = null;
+      document.getElementById('stride-animate').textContent = '▶ Animate sweep';
+      animPos = null; update(); return;
+    }
+    document.getElementById('stride-animate').textContent = '⏸ Stop';
+    const out = Math.floor((N + 2*P - K) / S) + 1;
+    let oi = 0, oj = 0;
+    animTimer = setInterval(() => {
+      animPos = { i: oi*S, j: oj*S, outI: oi, outJ: oj };
+      const padded = N + 2*P;
+      render(out, padded);
+      oj++;
+      if (oj >= out) { oj = 0; oi++; }
+      if (oi >= out) {
+        clearInterval(animTimer); animTimer = null;
+        document.getElementById('stride-animate').textContent = '▶ Animate sweep';
+        setTimeout(() => { animPos = null; update(); }, 600);
+      }
+    }, 320);
+  }
+
+  ['ns-slider','ks-slider','st-slider','pd-slider'].forEach(id => {
+    document.getElementById(id).oninput = () => {
+      animPos = null;
+      if (animTimer) { clearInterval(animTimer); animTimer = null; document.getElementById('stride-animate').textContent = '▶ Animate sweep'; }
+      update();
+    };
+  });
+  document.getElementById('stride-animate').onclick = animate;
+
+  update();
+})();
+
+/* ============================================
+   §4 POOLING
+   ============================================ */
+(() => {
+  const svg = document.getElementById('pool-svg');
+  if (!svg) return;
+  const status = document.getElementById('pool-status');
+  const label = document.getElementById('pool-label');
+  const eq = document.getElementById('pool-eq');
+
+  let mode = 'max';
+  let W = 2, S = 2;
+  let inputData;
+  let pos = { i: 0, j: 0 };
+  let output;
+  let playing = null;
+  const N_FIXED = 6;
+
+  function generateInput() {
+    inputData = [];
+    for (let i = 0; i < N_FIXED; i++) {
+      const row = [];
+      for (let j = 0; j < N_FIXED; j++) row.push(Math.floor(Math.random() * 9) + 1);
+      inputData.push(row);
+    }
+  }
+
+  function computeOutShape() {
+    return Math.max(0, Math.floor((N_FIXED - W) / S) + 1);
+  }
+
+  function reset() {
+    pos = { i: 0, j: 0 };
+    const OUT = computeOutShape();
+    output = Array.from({length: OUT}, () => Array(OUT).fill(null));
+    status.innerHTML = `<span class="pulse-dot"></span>Window <span class="key">(0,0)</span> — Click Step.`;
+    if (playing) { clearInterval(playing); playing = null; document.getElementById('pool-play').textContent = '▶ Auto-play'; }
+    render();
+  }
+
+  function poolOp(window) {
+    if (mode === 'max') return Math.max(...window);
+    return Math.round(window.reduce((a,b) => a+b, 0) / window.length * 10) / 10;
+  }
+
+  function render() {
+    clear(svg);
+    const OUT = computeOutShape();
+    const cell = 32;
+    const inX = 10, inY = 50;
+    const outX = 290, outY = 50 + ((N_FIXED - OUT) * cell) / 2;
+
+    el('text', { x: inX + (N_FIXED*cell)/2, y: 30, class: 'cell-text', 'font-size': 10, fill: '#7a7c74' }, svg).textContent = `INPUT ${N_FIXED}×${N_FIXED}`;
+    if (OUT > 0) el('text', { x: outX + (OUT*cell)/2, y: 30, class: 'cell-text', 'font-size': 10, fill: '#7a7c74' }, svg).textContent = `OUTPUT ${OUT}×${OUT}`;
+
+    for (let i = 0; i < N_FIXED; i++) {
+      for (let j = 0; j < N_FIXED; j++) {
+        const inWindow = i >= pos.i && i < pos.i + W && j >= pos.j && j < pos.j + W && (pos.i + W <= N_FIXED) && (pos.j + W <= N_FIXED);
+        el('rect', {
+          x: inX + j*cell, y: inY + i*cell,
+          width: cell, height: cell,
+          fill: inWindow ? 'rgba(200,68,42,0.32)' : '#ffffff',
+          stroke: '#c9c6b8', 'stroke-width': 1, rx: 2
+        }, svg);
+        el('text', {
+          x: inX + j*cell + cell/2, y: inY + i*cell + cell/2,
+          class: 'cell-text'
+        }, svg).textContent = inputData[i][j];
+      }
+    }
+
+    for (let i = 0; i < OUT; i++) {
+      for (let j = 0; j < OUT; j++) {
+        const isCurrent = Math.floor(pos.i / S) === i && Math.floor(pos.j / S) === j && (pos.i % S === 0) && (pos.j % S === 0);
+        const filled = output[i][j] !== null;
+        el('rect', {
+          x: outX + j*cell, y: outY + i*cell,
+          width: cell, height: cell,
+          fill: isCurrent ? 'rgba(45,93,79,0.55)' : (filled ? 'rgba(45,93,79,0.22)' : '#ffffff'),
+          stroke: '#c9c6b8', 'stroke-width': 1, rx: 2
+        }, svg);
+        if (filled) {
+          el('text', {
+            x: outX + j*cell + cell/2, y: outY + i*cell + cell/2,
+            class: 'cell-text', fill: '#2d5d4f'
+          }, svg).textContent = output[i][j];
+        }
+      }
+    }
+
+    if (OUT > 0) {
+      el('path', {
+        d: `M ${inX + N_FIXED*cell + 8} ${inY + (N_FIXED*cell)/2} L ${outX - 8} ${outY + (OUT*cell)/2}`,
+        stroke: '#c8442a', 'stroke-width': 1.5, fill: 'none', 'stroke-dasharray': '4,3'
+      }, svg);
+    }
+  }
+
+  function step() {
+    const OUT = computeOutShape();
+    if (Math.floor(pos.i / S) >= OUT) return;
+    if (pos.i + W > N_FIXED || pos.j + W > N_FIXED) return;
+
+    const window = [];
+    for (let ki = 0; ki < W; ki++) for (let kj = 0; kj < W; kj++) {
+      window.push(inputData[pos.i + ki][pos.j + kj]);
+    }
+    const val = poolOp(window);
+    const oi = Math.floor(pos.i / S), oj = Math.floor(pos.j / S);
+    if (oi < OUT && oj < OUT) output[oi][oj] = val;
+    const op = mode === 'max' ? 'max' : 'avg';
+    status.innerHTML = `<span class="pulse-dot"></span>Window at <span class="key">(${pos.i},${pos.j})</span> · <span class="calc">${op}([${window.join(',')}]) = ${val}</span>`;
+
+    pos.j += S;
+    if (pos.j + W > N_FIXED) { pos.j = 0; pos.i += S; }
+    render();
+
+    if (Math.floor(pos.i / S) >= OUT && playing) {
+      clearInterval(playing); playing = null;
+      document.getElementById('pool-play').textContent = '▶ Auto-play';
+    }
+  }
+
+  document.querySelectorAll('.tab').forEach(t => {
+    t.onclick = () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      mode = t.dataset.pool;
+      label.textContent = mode === 'max' ? 'Input · Max-pooled output' : 'Input · Average-pooled output';
+      eq.innerHTML = mode === 'max'
+        ? '<span class="out">max</span>-pool: output[i,j] = max over window'
+        : '<span class="out">avg</span>-pool: output[i,j] = mean of window';
+      reset();
+    };
+  });
+
+  document.getElementById('pw-slider').oninput = (e) => {
+    W = parseInt(e.target.value);
+    document.getElementById('pw-val').textContent = W;
+    document.getElementById('pw-val2').textContent = W;
+    reset();
+  };
+  document.getElementById('ps-slider').oninput = (e) => {
+    S = parseInt(e.target.value);
+    document.getElementById('ps-val').textContent = S;
+    reset();
+  };
+
+  document.getElementById('pool-step').onclick = step;
+  document.getElementById('pool-reset').onclick = reset;
+  document.getElementById('pool-randomize').onclick = () => { generateInput(); reset(); };
+  document.getElementById('pool-play').onclick = () => {
+    if (playing) {
+      clearInterval(playing); playing = null;
+      document.getElementById('pool-play').textContent = '▶ Auto-play';
+    } else {
+      document.getElementById('pool-play').textContent = '⏸ Pause';
+      playing = setInterval(step, 600);
+    }
+  };
+
+  generateInput();
+  reset();
+})();
+
+</script>
+</body>
+</html>
