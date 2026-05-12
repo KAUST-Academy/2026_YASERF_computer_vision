@@ -44,7 +44,7 @@
     <div class="breadcrumbs animate-up">
       <div class="container">
         <h2>Day 4</h2>
-        <p>Object Detection</p>
+        <p>Image Segmentation</p>
       </div>
     </div>
 
@@ -61,15 +61,9 @@
           <tbody>
             <tr>
               <td><strong>Slides</strong></td>
-              <td>Object Detection</td>
-              <td class="text-center"><a href="./Slides/Day 4/computer_vision_day_3_2.pdf" class="table-btn">Open</a></td>
-            </tr>
-            <tr>
-              <td><strong>YOLOv8</strong></td>
-              <td>Wind turbine detection using YOLOv8 with YOLO format dataset structure</td>
+              <td>Image Segmentation</td>
               <td class="text-center">
-                <a href="https://colab.research.google.com/github/KAUST-Academy/2026_YASERF_computer_vision/blob/main/Labs/Day%204/Day3_2_2_Object_Detection_Yolo.ipynb"
-                  class="table-btn" target="_blank">Colab</a>
+                <a href="./Slides/Day 4/computer_vision_day_3_1.pdf" class="table-btn">Open</a>
               </td>
             </tr>
           </tbody>
@@ -98,23 +92,15 @@
   <script src="assets/vendor/aos/aos.js"></script>
   <script>
     AOS.init();
-
     window.addEventListener('scroll', function () {
       const header = document.getElementById('header');
-      if (window.scrollY > 50) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
+      if (window.scrollY > 50) { header.classList.add('scrolled'); }
+      else { header.classList.remove('scrolled'); }
     });
-
-    const on = (type, el, listener, all = false) => {
+    const on = (type, el, listener) => {
       let selectEl = document.querySelector(el);
-      if (selectEl) {
-        selectEl.addEventListener(type, listener);
-      }
+      if (selectEl) { selectEl.addEventListener(type, listener); }
     }
-
     on('click', '.mobile-nav-toggle', function (e) {
       document.querySelector('#navbar').classList.toggle('navbar-mobile')
       this.classList.toggle('bi-list')

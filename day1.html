@@ -62,32 +62,37 @@
             <tr>
               <td><strong>Slides</strong></td>
               <td>Introduction to Computer Vision & CNNs</td>
-              <td class="text-center"><a href="./Slides/Day 1/computer_vision_day_1.pdf" class="table-btn">Open</a></td>
+              <td class="text-center">
+                <a href="./Slides/Day 1/computer_vision_day_1.pdf" class="table-btn">Open</a>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Annotated Slides</strong></td>
+              <td>Annotated version of the Day 1 lecture slides</td>
+              <td class="text-center">
+                <a href="./Slides/Day 1/computer_vision_day_1_annotated.pdf" class="table-btn">Open</a>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Assist Slides</strong></td>
+              <td>Supplementary slides for Day 1</td>
+              <td class="text-center">
+                <a href="./Slides/Day 1/CV Day 1 Assist Slides.pdf" class="table-btn">Open</a>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Day 1 Annotations</strong></td>
+              <td>Handwritten annotations from the Day 1 lecture</td>
+              <td class="text-center">
+                <a href="./Slides/Day 1/Day 1 Annotations.pdf" class="table-btn">Open</a>
+              </td>
             </tr>
             <tr>
               <td><strong>PyTorch Basics</strong></td>
               <td>PyTorch basics and tensor operations</td>
               <td class="text-center">
-                <a href="https://colab.research.google.com/github/KAUST-Academy/2026_YASERF_computer_vision/blob/main/Labs/Day%201/Day1_1_Pytorch_Basics.ipynb"
+                <a href="https://colab.research.google.com/github/KAUST-Academy/2026_YASERF_computer_vision/blob/main/Labs/Day%201/Pytorch_Basics.ipynb"
                   class="table-btn" target="_blank">Colab</a>
-              </td>
-            </tr>
-            <tr>
-              <td><strong>CNNs</strong></td>
-              <td>Image classification using CNNs and AlexNet on CIFAR-10</td>
-              <td class="text-center">
-                <a href="https://colab.research.google.com/github/KAUST-Academy/2026_YASERF_computer_vision/blob/main/Labs/Day%201/Day1_2_Image_Classification_CNN_And_AlexNet_CIFAR10.ipynb"
-                  class="table-btn" target="_blank">Colab</a>
-              </td>
-            </tr>
-            <tr>
-              <td><strong>Exercise</strong></td>
-              <td>CNN-based steel surface defect classification using the NEU Surface Defect Database</td>
-              <td class="text-center">
-                <a href="https://colab.research.google.com/github/KAUST-Academy/2026_YASERF_computer_vision/blob/main/Labs/Day%201/Day1_Exercise_CNN_NEU_SteelDefects.ipynb"
-                  class="table-btn" target="_blank">Colab</a>
-                <a href="https://colab.research.google.com/github/KAUST-Academy/2026_YASERF_computer_vision/blob/main/Labs/Day%201/Day1_Exercise_CNN_NEU_SteelDefects_Sol.ipynb"
-                  class="table-btn" target="_blank" style="margin-left: 8px;">Solutions</a>
               </td>
             </tr>
           </tbody>
@@ -116,23 +121,15 @@
   <script src="assets/vendor/aos/aos.js"></script>
   <script>
     AOS.init();
-
     window.addEventListener('scroll', function () {
       const header = document.getElementById('header');
-      if (window.scrollY > 50) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
+      if (window.scrollY > 50) { header.classList.add('scrolled'); }
+      else { header.classList.remove('scrolled'); }
     });
-
-    const on = (type, el, listener, all = false) => {
+    const on = (type, el, listener) => {
       let selectEl = document.querySelector(el);
-      if (selectEl) {
-        selectEl.addEventListener(type, listener);
-      }
+      if (selectEl) { selectEl.addEventListener(type, listener); }
     }
-
     on('click', '.mobile-nav-toggle', function (e) {
       document.querySelector('#navbar').classList.toggle('navbar-mobile')
       this.classList.toggle('bi-list')
