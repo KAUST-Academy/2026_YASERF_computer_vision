@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understanding mAP — Object Detection Scoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAFAFA;--surface:#FFFFFF;--surface2:#F5F5F5;--surface3:#EEEEEE;
+  --tx:#111;--tx2:#555;--tx3:#999;
+  --bd:rgba(0,0,0,0.08);--bd2:rgba(0,0,0,0.12);
+  --blue:#2563EB;--blue-soft:#EFF6FF;--blue-dk:#1E40AF;
+  --green:#059669;--green-soft:#ECFDF5;--green-dk:#065F46;
+  --amber:#D97706;--amber-soft:#FFFBEB;--amber-dk:#92400E;
+  --red:#DC2626;--red-soft:#FEF2F2;--red-dk:#991B1B;
+  --purple:#7C3AED;--purple-soft:#F5F3FF;--purple-dk:#5B21B6;
+  --coral:#EA580C;
+  --font:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --r:8px;--r-lg:12px;--r-xl:16px;
+  --max:720px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.7;-webkit-font-smoothing:antialiased;font-size:15px}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 1.25rem}
+
+.hero{padding:4rem 0 3rem;text-align:center}
+.hero h1{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:700;letter-spacing:-0.04em;line-height:1.15;margin-bottom:0.75rem}
+.hero h1 span{background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:var(--tx2);font-size:1.05rem;max-width:520px;margin:0 auto}
+
+.step{padding:3rem 0;border-top:1px solid var(--bd)}
+.step:first-of-type{border-top:none}
+.step-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:1.5rem}
+.step-n{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;margin-top:2px}
+.step-n.g{background:var(--green)}.step-n.a{background:var(--amber)}.step-n.p{background:var(--purple)}.step-n.r{background:var(--red)}
+.step-title{font-size:1.35rem;font-weight:700;letter-spacing:-0.03em;line-height:1.25}
+.step-sub{font-size:0.9rem;color:var(--tx2);margin-top:2px}
+
+p.prose{color:var(--tx2);margin-bottom:1rem;font-size:0.95rem;line-height:1.75}
+strong{font-weight:600;color:var(--tx)}
+
+.card{background:var(--surface);border:1px solid var(--bd);border-radius:var(--r-lg);padding:1.25rem;margin-bottom:1rem}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.g2{grid-template-columns:1fr}}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:560px){.g4{grid-template-columns:1fr 1fr}}
+
+.co{display:flex;gap:14px;padding:16px 18px;border-radius:var(--r-lg);margin:1.25rem 0;font-size:0.88rem;line-height:1.65}
+.co.bl{background:var(--blue-soft);color:var(--blue-dk)}
+.co.gr{background:var(--green-soft);color:var(--green-dk)}
+.co.am{background:var(--amber-soft);color:var(--amber-dk)}
+.co.re{background:var(--red-soft);color:var(--red-dk)}
+.co.pu{background:var(--purple-soft);color:var(--purple-dk)}
+.co .ic{font-size:20px;flex-shrink:0;margin-top:1px}
+
+.btn{padding:8px 16px;border:1px solid var(--bd2);background:var(--surface);border-radius:var(--r);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;color:var(--tx)}
+.btn:hover{background:var(--surface2)}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.3;cursor:default;transform:none}
+.btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+
+.met{background:var(--surface2);border-radius:var(--r-lg);padding:16px;text-align:center}
+.met .n{font-size:1.8rem;font-weight:700;line-height:1}
+.met .l{font-size:11px;color:var(--tx3);margin-top:4px;text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+.met .br{height:4px;background:var(--surface3);border-radius:2px;margin-top:10px;overflow:hidden}
+.met .bf{height:100%;border-radius:2px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:10px 8px;color:var(--tx3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--surface3)}
+.tbl td{padding:10px 8px;border-bottom:1px solid var(--surface2)}
+.tbl .c{text-align:center}
+.tbl .tp{color:var(--green);font-weight:600}.tbl .fp{color:var(--red);font-weight:600}
+.tbl tr.dim{opacity:.2}
+
+.chbox{position:relative;height:280px;margin:1rem 0}
+
+.exg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:1.25rem 0}
+@media(max-width:480px){.exg{grid-template-columns:1fr}}
+.ex{padding:16px;border-radius:var(--r-lg);text-align:center}
+.ex .v{font-size:1.6rem;font-weight:700;margin:6px 0 2px}.ex .l{font-size:12px;font-weight:500}
+
+.bars{display:flex;align-items:flex-end;gap:4px;height:180px;margin:1.5rem 0 .5rem}
+.bars .cl{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bars .b{width:100%;border-radius:4px 4px 0 0;transition:height .5s}.bars .vl{font-size:11px;font-weight:600;color:var(--tx2)}.bars .lb{font-size:10px;color:var(--tx3)}
+
+.gt{height:12px;background:var(--surface3);border-radius:6px;overflow:hidden;margin-bottom:6px}
+.gf{height:100%;border-radius:6px;transition:width .4s,background .3s}
+.tier{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r);cursor:pointer;transition:background .15s;font-size:.88rem}
+.tier:hover{background:var(--surface2)}
+.tier .d{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.tier .rg{font-weight:700;min-width:65px;font-size:.85rem}
+.verd{display:flex;align-items:center;gap:24px;padding:20px 24px;background:var(--surface2);border-radius:var(--r-xl);margin-top:16px}
+.verd .bg{font-size:2.8rem;font-weight:700;line-height:1}
+.verd .tg{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+
+.sheet{background:var(--surface);border:1px solid var(--bd);border-radius:var(--r-xl);padding:1.75rem;margin-top:1rem}
+.sheet h3{font-size:1rem;font-weight:700;margin-bottom:12px}
+.pipe{counter-reset:p}
+.pipe .row{display:flex;gap:12px;align-items:flex-start;padding:8px 0;font-size:.9rem;line-height:1.5}
+.pipe .row::before{counter-increment:p;content:counter(p);width:24px;height:24px;border-radius:50%;background:var(--blue-soft);color:var(--blue-dk);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.pipe .row:last-child::before{background:var(--purple-soft);color:var(--purple-dk)}
+.trm{display:grid;grid-template-columns:100px 1fr;gap:4px 16px;font-size:.88rem;line-height:2}
+.trm dt{font-weight:700}.trm dd{color:var(--tx2)}
+
+#iouCanvas{width:100%;display:block;border-radius:var(--r)}
+input[type=range]{accent-color:var(--blue);width:100%}
+footer{padding:3rem 0;text-align:center;color:var(--tx3);font-size:.8rem;border-top:1px solid var(--bd)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<div class="hero">
+  <h1>Understanding <span>mAP</span> in<br>object detection</h1>
+  <p>A visual guide from plain English to the full technical picture</p>
+</div>
+
+<!-- 1 -->
+<section class="step">
+  <div class="step-header"><div class="step-n">1</div><div><div class="step-title">Your model draws boxes around objects</div><div class="step-sub">What we're actually measuring</div></div></div>
+  <p class="prose">An object detection model looks at an image and does two things: it <strong>finds</strong> objects and <strong>draws bounding boxes</strong> around them. Each box comes with a confidence score.</p>
+  <div class="g2">
+    <div class="card" style="text-align:center;padding:1.5rem 1rem">
+      <svg viewBox="0 0 220 140" width="100%" style="max-width:220px;margin:0 auto;display:block"><rect x="5" y="5" width="210" height="130" rx="6" fill="#F5F5F5"/><rect x="25" y="30" width="65" height="50" rx="3" fill="none" stroke="#059669" stroke-width="2.5"/><rect x="28" y="33" width="62" height="47" rx="2" fill="none" stroke="#2563EB" stroke-width="1.5" stroke-dasharray="5 3"/><rect x="20" y="20" width="24" height="12" rx="3" fill="#059669"/><text x="32" y="29" text-anchor="middle" font-size="8" fill="#fff" font-weight="600" font-family="Inter">car</text><text x="58" y="94" font-size="9" fill="#2563EB" font-family="Inter" font-weight="600" text-anchor="middle">0.95</text><rect x="130" y="40" width="55" height="42" rx="3" fill="none" stroke="#059669" stroke-width="2.5"/><rect x="128" y="43" width="53" height="39" rx="2" fill="none" stroke="#2563EB" stroke-width="1.5" stroke-dasharray="5 3"/><rect x="125" y="30" width="24" height="12" rx="3" fill="#059669"/><text x="137" y="39" text-anchor="middle" font-size="8" fill="#fff" font-weight="600" font-family="Inter">car</text><text x="155" y="96" font-size="9" fill="#2563EB" font-family="Inter" font-weight="600" text-anchor="middle">0.91</text></svg>
+      <div style="margin-top:12px;font-size:13px;font-weight:600;color:var(--green)">&#10003; Good predictions</div>
+      <div style="font-size:12px;color:var(--tx3)">Boxes align with real objects</div>
+    </div>
+    <div class="card" style="text-align:center;padding:1.5rem 1rem">
+      <svg viewBox="0 0 220 140" width="100%" style="max-width:220px;margin:0 auto;display:block"><rect x="5" y="5" width="210" height="130" rx="6" fill="#F5F5F5"/><rect x="25" y="30" width="65" height="50" rx="3" fill="none" stroke="#059669" stroke-width="2.5"/><rect x="50" y="45" width="70" height="55" rx="2" fill="none" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="5 3"/><text x="85" y="115" font-size="9" fill="#DC2626" font-family="Inter" font-weight="600" text-anchor="middle">0.72</text><rect x="145" y="70" width="50" height="38" rx="2" fill="none" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="5 3"/><text x="170" y="65" font-size="8" fill="#DC2626" font-family="Inter" font-weight="600" text-anchor="middle">ghost!</text><text x="170" y="122" font-size="9" fill="#DC2626" font-family="Inter" font-weight="600" text-anchor="middle">0.45</text></svg>
+      <div style="margin-top:12px;font-size:13px;font-weight:600;color:var(--red)">&#10007; Bad predictions</div>
+      <div style="font-size:12px;color:var(--tx3)">Sloppy box + hallucinated object</div>
+    </div>
+  </div>
+  <div class="co bl"><div class="ic">&#9432;</div><div><strong>mAP is a single score from 0 to 1</strong> that captures both skills at once: finding the right objects AND drawing tight boxes. Higher = better. 1.0 = perfect.</div></div>
+</section>
+
+<!-- 2 -->
+<section class="step">
+  <div class="step-header"><div class="step-n g">2</div><div><div class="step-title">Judging a single box: IoU</div><div class="step-sub">Intersection over Union — the overlap score</div></div></div>
+  <p class="prose">For each predicted box, we measure how much it overlaps with the real box. This overlap ratio is <strong>IoU</strong> — from 0 (no overlap) to 1 (perfect match).</p>
+  <div class="card">
+    <canvas id="iouCanvas" width="720" height="240"></canvas>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+      <span style="font-size:13px;color:var(--tx3)">Move predicted box:</span>
+      <input type="range" min="0" max="130" value="25" id="iouSlider" style="flex:1" oninput="drawIoU()">
+      <span id="iouVal" style="font-size:1.05rem;font-weight:700;min-width:80px;text-align:right">IoU: 0.58</span>
+    </div>
+  </div>
+  <div class="co gr" id="iouV"><div class="ic">&#10003;</div><div>At IoU threshold 0.50: this counts as a <strong>correct detection</strong> (True Positive)</div></div>
+  <p class="prose">The <strong>@50</strong> in "mAP@50" means the threshold is 0.50. <strong>@75</strong> means 75% overlap needed. <strong>@[0.5:0.95]</strong> averages across 10 thresholds from easy to very strict.</p>
+</section>
+
+<!-- 3 -->
+<section class="step">
+  <div class="step-header"><div class="step-n a">3</div><div><div class="step-title">Precision and recall</div><div class="step-sub">Two sides of detection quality</div></div></div>
+  <div class="g2" style="margin-bottom:1.25rem">
+    <div class="card">
+      <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;font-weight:500;margin-bottom:6px">Precision</div>
+      <div style="font-size:1.05rem;font-weight:600;line-height:1.3">"Of everything I detected, how many were real?"</div>
+      <div style="font-size:13px;color:var(--tx2);margin-top:8px">High precision = few false alarms</div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:12px;background:var(--surface2);padding:8px 12px;border-radius:6px;color:var(--tx2)">TP / (TP + FP)</div>
+    </div>
+    <div class="card">
+      <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;font-weight:500;margin-bottom:6px">Recall</div>
+      <div style="font-size:1.05rem;font-weight:600;line-height:1.3">"Of all real objects, how many did I find?"</div>
+      <div style="font-size:13px;color:var(--tx2);margin-top:8px">High recall = few missed objects</div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:12px;background:var(--surface2);padding:8px 12px;border-radius:6px;color:var(--tx2)">TP / (TP + FN)</div>
+    </div>
+  </div>
+  <div class="co am"><div class="ic">&#8646;</div><div><strong>There's always a trade-off.</strong> Accept more detections &rarr; recall up but precision drops. Be selective &rarr; precision high but you miss things. AP captures this balance.</div></div>
+</section>
+
+<!-- 4 -->
+<section class="step">
+  <div class="step-header"><div class="step-n">4</div><div><div class="step-title">Building the precision-recall curve</div><div class="step-sub">Walk through detections one by one</div></div></div>
+  <p class="prose">Sort detections by confidence (highest first). Walk through one at a time, keeping a running count. Each row gives one point on the PR curve.</p>
+  <div class="card" style="overflow-x:auto">
+    <table class="tbl"><thead><tr><th>#</th><th>Conf.</th><th>Match</th><th class="c">TP</th><th class="c">FP</th><th class="c">Precision</th><th class="c">Recall</th></tr></thead><tbody id="prB"></tbody></table>
+    <div style="font-size:12px;color:var(--tx3);margin-top:8px">Ground truth objects: <strong>3</strong></div>
+    <div class="btn-row"><button class="btn on" id="prA" onclick="prAdd()">Add next detection</button><button class="btn" onclick="prAll()">Show all</button><button class="btn" onclick="prReset()">Reset</button></div>
+    <div id="prM" style="font-size:13px;color:var(--tx2);min-height:20px"></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="step">
+  <div class="step-header"><div class="step-n p">5</div><div><div class="step-title">AP = area under the PR curve</div><div class="step-sub">The shaded area below the curve IS the score</div></div></div>
+  <p class="prose">Plot the PR points, smooth the curve (at each recall, take the max precision at any recall &ge; that point), then measure the shaded area.</p>
+  <div class="card">
+    <div class="btn-row" style="margin-top:0"><button class="btn on" id="a0" onclick="showAP(0)">Raw points</button><button class="btn" id="a1" onclick="showAP(1)">Smoothed</button><button class="btn" id="a2" onclick="showAP(2)">Rectangles</button><button class="btn" id="a3" onclick="showAP(3)">Sum area</button></div>
+    <div class="chbox"><canvas id="apC"></canvas></div>
+    <div id="apM" style="font-size:13px;color:var(--tx2)"></div>
+  </div>
+  <div class="co pu"><div class="ic">&#9635;</div><div><strong>Think of it as filling a 1&times;1 square.</strong> Perfect model fills it all (AP=1.0). Weak model fills a sliver. The staircase steps are rectangles &mdash; just multiply width&times;height and add up.</div></div>
+</section>
+
+<!-- 6 -->
+<section class="step">
+  <div class="step-header"><div class="step-n">6</div><div><div class="step-title">From AP to mAP</div><div class="step-sub">Repeat for every object class, then average</div></div></div>
+  <p class="prose">Compute AP for every class, then average them. That's the <strong>m</strong> in mAP &mdash; mean Average Precision.</p>
+  <div class="g4" style="margin-bottom:1.25rem">
+    <div class="met"><div class="n" style="color:var(--green)">0.83</div><div class="l">Car</div><div class="br"><div class="bf" style="width:83%;background:var(--green)"></div></div></div>
+    <div class="met"><div class="n" style="color:var(--blue)">0.76</div><div class="l">Person</div><div class="br"><div class="bf" style="width:76%;background:var(--blue)"></div></div></div>
+    <div class="met"><div class="n" style="color:var(--purple)">0.91</div><div class="l">Dog</div><div class="br"><div class="bf" style="width:91%;background:var(--purple)"></div></div></div>
+    <div class="met"><div class="n" style="color:var(--coral)">0.68</div><div class="l">Bike</div><div class="br"><div class="bf" style="width:68%;background:var(--coral)"></div></div></div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:12px;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;font-weight:500">mAP@50 = mean( 0.83, 0.76, 0.91, 0.68 )</div>
+    <div style="font-size:2.5rem;font-weight:700;color:var(--amber);margin:4px 0;letter-spacing:-.03em">0.80</div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="step">
+  <div class="step-header"><div class="step-n a">7</div><div><div class="step-title">The multi-level exam</div><div class="step-sub">Why mAP@[0.5:0.95] is harder than mAP@50</div></div></div>
+  <p class="prose">Repeat everything at <strong>10 difficulty levels</strong>. Easy (IoU=0.50) to nearly pixel-perfect (IoU=0.95). Then average all 10 scores.</p>
+  <div class="exg">
+    <div class="ex" style="background:var(--green-soft)"><div class="l" style="color:var(--green-dk)">Easy exam</div><div class="v" style="color:var(--green)">0.80</div><div class="l" style="color:var(--green-dk)">IoU = 0.50</div></div>
+    <div class="ex" style="background:var(--amber-soft)"><div class="l" style="color:var(--amber-dk)">Medium</div><div class="v" style="color:var(--amber)">0.58</div><div class="l" style="color:var(--amber-dk)">IoU = 0.75</div></div>
+    <div class="ex" style="background:var(--red-soft)"><div class="l" style="color:var(--red-dk)">Hard exam</div><div class="v" style="color:var(--red)">0.08</div><div class="l" style="color:var(--red-dk)">IoU = 0.95</div></div>
+  </div>
+  <div class="bars" id="bars"></div>
+  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx3);margin-bottom:.5rem"><span>0.50 (lenient)</span><span>IoU threshold</span><span>0.95 (strict)</span></div>
+  <div class="card" style="text-align:center;margin-top:1rem">
+    <div style="font-size:12px;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;font-weight:500">COCO mAP = average of all 10 bars</div>
+    <div style="font-size:2.8rem;font-weight:700;color:var(--purple);margin:4px 0;letter-spacing:-.03em">0.50</div>
+    <div style="font-size:12px;color:var(--tx3)">mAP@[0.5:0.95]</div>
+  </div>
+  <div class="co am" style="margin-top:1rem"><div class="ic">&#9888;</div><div><strong>Why so much lower?</strong> mAP@50 was 0.80 but COCO mAP is only 0.50. The strict thresholds destroy models with sloppy boxes, dragging the average down. This rewards precise localization.</div></div>
+</section>
+
+<!-- 8 -->
+<section class="step">
+  <div class="step-header"><div class="step-n g">8</div><div><div class="step-title">What does my score mean?</div><div class="step-sub">Drag the slider to interpret any mAP value</div></div></div>
+  <div class="card" style="padding:1.5rem">
+    <div style="margin-bottom:16px"><div class="gt"><div class="gf" id="gf" style="width:50%;background:var(--blue)"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--tx3);margin-top:4px"><span>0.0</span><span>0.25</span><span>0.50</span><span>0.75</span><span>1.0</span></div></div>
+    <input type="range" min="0" max="100" value="50" id="vS" oninput="updV(this.value)">
+    <div style="margin-top:16px">
+      <div class="tier" onclick="updV(75)"><div class="d" style="background:var(--green)"></div><span class="rg" style="color:var(--green)">0.60+</span><span style="color:var(--tx2)">Excellent &mdash; state of the art, production ready</span></div>
+      <div class="tier" onclick="updV(50)"><div class="d" style="background:var(--blue)"></div><span class="rg" style="color:var(--blue)">0.40&ndash;0.55</span><span style="color:var(--tx2)">Solid &mdash; usable for most real-world tasks</span></div>
+      <div class="tier" onclick="updV(28)"><div class="d" style="background:var(--amber)"></div><span class="rg" style="color:var(--amber)">0.20&ndash;0.35</span><span style="color:var(--tx2)">Needs work &mdash; missing objects or sloppy boxes</span></div>
+      <div class="tier" onclick="updV(10)"><div class="d" style="background:var(--red)"></div><span class="rg" style="color:var(--red)">Below 0.15</span><span style="color:var(--tx2)">Struggling &mdash; needs serious improvement</span></div>
+    </div>
+    <div class="verd"><div style="text-align:center"><div class="bg" id="vN" style="color:var(--blue)">0.50</div><div class="tg">mAP@[0.5:0.95]</div></div><div><div style="font-size:1rem;font-weight:600" id="vT">Solid model</div><div style="font-size:.85rem;color:var(--tx2);margin-top:2px" id="vD">Usable for most real-world tasks. Finds most objects with decent box accuracy.</div></div></div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="step">
+  <div class="step-header"><div class="step-n p">9</div><div><div class="step-title">Cheat sheet</div><div class="step-sub">Everything on one page</div></div></div>
+  <div class="co bl" style="border-left:3px solid var(--blue);border-radius:0 var(--r-lg) var(--r-lg) 0"><div><strong>One sentence:</strong> mAP@[0.5:0.95] is a comprehensive exam score for your object detector &mdash; it tests whether the model finds the right objects AND draws precise boxes, averaged across easy-to-hard grading. <strong>Higher = better. Range: 0 to 1.</strong></div></div>
+  <div class="sheet">
+    <h3>The full pipeline</h3>
+    <div class="pipe">
+      <div class="row">Model outputs detections with confidence scores</div>
+      <div class="row">Match each detection to ground truth using IoU at a threshold</div>
+      <div class="row">Sort by confidence, walk through &rarr; build precision-recall table</div>
+      <div class="row">Plot PR curve &rarr; area under it = <strong>AP</strong> for that class</div>
+      <div class="row">Average AP across all classes = <strong>mAP</strong> at that threshold</div>
+      <div class="row">Average mAP across 10 IoU thresholds = <strong>COCO mAP@[0.5:0.95]</strong></div>
+    </div>
+  </div>
+  <div class="sheet">
+    <h3>Key terms</h3>
+    <dl class="trm">
+      <dt>IoU</dt><dd>Overlap between predicted and real box (0&ndash;1)</dd>
+      <dt>Precision</dt><dd>Of detections made, how many were correct?</dd>
+      <dt>Recall</dt><dd>Of real objects, how many did we find?</dd>
+      <dt>AP</dt><dd>Area under PR curve &mdash; score for one class</dd>
+      <dt>mAP</dt><dd>Mean of AP across all classes</dd>
+      <dt>mAP@50</dt><dd>mAP with lenient 50% overlap threshold</dd>
+      <dt>mAP@[.5:.95]</dt><dd>Average across 10 thresholds &mdash; the gold standard</dd>
+    </dl>
+  </div>
+</section>
+
+</div>
+<footer><div class="wrap">Understanding mAP in Object Detection &mdash; Interactive Visual Guide</div></footer>
+
+<script>
+/* IoU */
+const iC=document.getElementById('iouCanvas'),ix=iC.getContext('2d');
+function drawIoU(){const off=+document.getElementById('iouSlider').value;ix.clearRect(0,0,iC.width,iC.height);const gt={x:100,y:25,w:200,h:170},pd={x:100+off,y:25+off*.45,w:200,h:170},x1=Math.max(gt.x,pd.x),y1=Math.max(gt.y,pd.y),x2=Math.min(gt.x+gt.w,pd.x+pd.w),y2=Math.min(gt.y+gt.h,pd.y+pd.h),iw=Math.max(0,x2-x1),ih=Math.max(0,y2-y1),inter=iw*ih,union=gt.w*gt.h+pd.w*pd.h-inter,iou=union>0?inter/union:0;
+document.getElementById('iouVal').textContent='IoU: '+iou.toFixed(2);document.getElementById('iouVal').style.color=iou>=.5?'var(--green)':'var(--red)';
+const vd=document.getElementById('iouV');vd.className='co '+(iou>=.5?'gr':'re');vd.innerHTML='<div class="ic">'+(iou>=.5?'&#10003;':'&#10007;')+'</div><div>At IoU threshold 0.50: this '+(iou>=.5?'counts as a <strong>correct detection</strong> (True Positive)':'is a <strong>failed detection</strong> (False Positive) &mdash; box too far off')+'</div>';
+ix.strokeStyle='#059669';ix.lineWidth=2.5;ix.setLineDash([]);ix.strokeRect(gt.x,gt.y,gt.w,gt.h);ix.strokeStyle='#2563EB';ix.lineWidth=2;ix.setLineDash([7,4]);ix.strokeRect(pd.x,pd.y,pd.w,pd.h);ix.setLineDash([]);
+if(iw>0&&ih>0){ix.fillStyle='rgba(217,119,6,0.25)';ix.fillRect(x1,y1,iw,ih);ix.strokeStyle='#D97706';ix.lineWidth=1.5;ix.strokeRect(x1,y1,iw,ih)}
+const fx=440;ix.font='600 15px Inter';ix.fillStyle='#111';ix.textAlign='left';ix.fillText('IoU = Intersection / Union',fx,55);ix.font='400 13px Inter';ix.fillStyle='#999';ix.fillText('Intersection = '+Math.round(inter)+' px\u00B2',fx,80);ix.fillText('Union = '+Math.round(union)+' px\u00B2',fx,100);ix.fillStyle=iou>=.5?'#059669':'#DC2626';ix.font='600 13px Inter';ix.fillText(iou>=.5?'\u2713 True positive (\u2265 0.50)':'\u2717 False positive (< 0.50)',fx,130);
+const ly=170;ix.fillStyle='#059669';ix.fillRect(fx,ly,10,10);ix.fillStyle='#555';ix.font='400 12px Inter';ix.fillText('Ground truth',fx+16,ly+9);ix.strokeStyle='#2563EB';ix.lineWidth=1.5;ix.setLineDash([4,3]);ix.strokeRect(fx,ly+18,10,10);ix.setLineDash([]);ix.fillText('Predicted',fx+16,ly+27);ix.fillStyle='rgba(217,119,6,0.4)';ix.fillRect(fx,ly+36,10,10);ix.fillStyle='#555';ix.fillText('Overlap',fx+16,ly+45)}
+drawIoU();
+
+/* PR Table */
+const GT=3,DT=[{c:.95,t:1},{c:.91,t:1},{c:.87,t:0},{c:.82,t:1},{c:.76,t:0}];
+const PE=['1 correct of 1 \u2192 Prec=1.00, Recall=0.33','2 of 2 \u2192 Prec=1.00, Recall=0.67','False positive! 2 of 3 \u2192 Prec drops to 0.67','3 of 4 \u2192 Prec=0.75. All 3 found \u2192 Recall=1.00!','Another FP \u2192 Prec=0.60. Recall stays 1.00'];
+let ps=0;
+function prR(){const b=document.getElementById('prB');b.innerHTML='';let tp=0,fp=0;for(let i=0;i<DT.length;i++){const d=DT[i],a=i<ps;if(a){d.t?tp++:fp++}const p=a?(tp/(tp+fp)).toFixed(2):'\u2014',r=a?(tp/GT).toFixed(2):'\u2014',tr=document.createElement('tr');if(!a)tr.className='dim';tr.innerHTML=`<td>${i+1}</td><td>${d.c.toFixed(2)}</td><td class="${d.t?'tp':'fp'}">${d.t?'TP':'FP'}</td><td class="c">${a?tp:'\u2014'}</td><td class="c">${a?fp:'\u2014'}</td><td class="c" style="font-weight:600">${p}</td><td class="c" style="font-weight:600">${r}</td>`;b.appendChild(tr)}}
+function prAdd(){if(ps<DT.length){ps++;prR();document.getElementById('prM').textContent=PE[ps-1]}if(ps>=DT.length)document.getElementById('prA').disabled=true}
+function prAll(){while(ps<DT.length)prAdd()}
+function prReset(){ps=0;prR();document.getElementById('prM').textContent='';document.getElementById('prA').disabled=false}
+prR();
+
+/* AP Chart */
+const RP=[{x:0,y:1},{x:.33,y:1},{x:.67,y:1},{x:.67,y:.67},{x:1,y:.75},{x:1,y:.6}],SR=[0,.33,.67,1],SP=SR.map(r=>({x:r,y:Math.max(...RP.filter(p=>p.x>=r).map(p=>p.y))}));
+const RC=[{a:0,b:.33,h:1},{a:.33,b:.67,h:1},{a:.67,b:1,h:.75}],RCL=['rgba(5,150,105,.18)','rgba(37,99,235,.18)','rgba(124,58,237,.18)'],RCB=['#059669','#2563EB','#7C3AED'];
+const AE=['Raw (recall, precision) points from the table. Jagged because false positives cause dips.','Smoothed: at each recall, take max precision at any recall \u2265 that point. Clean staircase.','Staircase steps = rectangles. Width = recall change, height = precision. Easy to measure.','<strong>AP = 0.33\u00D71.00 + 0.34\u00D71.00 + 0.33\u00D70.75 = 0.92</strong>'];
+let ac;
+function showAP(s){document.querySelectorAll('[id^=a]').forEach((b,i)=>{if(i<4)b.classList.toggle('on',i===s)});if(ac)ac.destroy();const ds=[];
+if(s===0)ds.push({data:RP,showLine:true,fill:false,tension:0,borderColor:'#2563EB',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#2563EB',pointBorderColor:'#fff',pointBorderWidth:2});
+if(s===1){ds.push({data:RP,showLine:true,fill:false,tension:0,borderColor:'rgba(37,99,235,.2)',borderWidth:1.5,borderDash:[4,3],pointRadius:3,pointBackgroundColor:'rgba(37,99,235,.25)',pointBorderWidth:0});ds.push({data:SP,showLine:true,fill:false,tension:0,stepped:'after',borderColor:'#D97706',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#D97706',pointBorderColor:'#fff',pointBorderWidth:2})}
+if(s>=2){ds.push({data:SP,showLine:true,fill:false,tension:0,stepped:'after',borderColor:'#D97706',borderWidth:2,pointRadius:4,pointBackgroundColor:'#D97706',pointBorderColor:'#fff',pointBorderWidth:2});RC.forEach((r,i)=>ds.push({data:[{x:r.a,y:0},{x:r.a,y:r.h},{x:r.b,y:r.h},{x:r.b,y:0}],showLine:true,fill:true,tension:0,pointRadius:0,borderColor:RCB[i],backgroundColor:RCL[i],borderWidth:1.5,borderDash:[4,3]}))}
+ac=new Chart(document.getElementById('apC'),{type:'scatter',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},scales:{x:{type:'linear',min:-.05,max:1.1,title:{display:true,text:'Recall',color:'#999',font:{size:12,family:'Inter'}},ticks:{color:'#999'},grid:{color:'rgba(0,0,0,.04)'}},y:{min:-.05,max:1.15,title:{display:true,text:'Precision',color:'#999',font:{size:12,family:'Inter'}},ticks:{color:'#999'},grid:{color:'rgba(0,0,0,.04)'}}},plugins:{legend:{display:false}}}});
+document.getElementById('apM').innerHTML=AE[s]}
+showAP(0);
+
+/* Bars */
+const TL=['0.50','0.55','0.60','0.65','0.70','0.75','0.80','0.85','0.90','0.95'],TV=[.80,.76,.71,.65,.58,.50,.41,.31,.19,.08];
+(function(){const c=document.getElementById('bars');TV.forEach((v,i)=>{const d=document.createElement('div');d.className='cl';const cl=v>=.6?'var(--green)':v>=.4?'var(--amber)':'var(--red)';d.innerHTML=`<div class="vl">${v.toFixed(2)}</div><div class="b" style="height:${v*160}px;background:${cl}"></div><div class="lb">${TL[i]}</div>`;c.appendChild(d)})})();
+
+/* Verdict */
+const VD=[{l:0,h:14,c:'var(--red)',t:'Struggling',d:'Missing most objects or very inaccurate boxes. Needs fundamental changes.'},{l:15,h:19,c:'var(--red)',t:'Weak',d:'Detects some objects but misses many. Not ready for real use.'},{l:20,h:35,c:'var(--amber)',t:'Needs work',d:'Finds some objects but misses too many or draws imprecise boxes.'},{l:36,h:45,c:'var(--blue)',t:'Getting there',d:'Reasonable. Finds most common objects. Could improve localization.'},{l:46,h:55,c:'var(--blue)',t:'Solid model',d:'Usable for most tasks. Decent accuracy and coverage.'},{l:56,h:64,c:'var(--green)',t:'Strong',d:'Reliably finds objects with tight boxes. Competitive with benchmarks.'},{l:65,h:100,c:'var(--green)',t:'Excellent',d:'State-of-the-art. Finds nearly everything with precise localization.'}];
+function updV(v){v=parseInt(v);document.getElementById('vS').value=v;document.getElementById('gf').style.width=v+'%';document.getElementById('vN').textContent=(v/100).toFixed(2);const x=VD.find(z=>v>=z.l&&v<=z.h)||VD[0];document.getElementById('gf').style.background=x.c;document.getElementById('vN').style.color=x.c;document.getElementById('vT').textContent=x.t;document.getElementById('vD').textContent=x.d}
+updV(50);
+</script>
+</body>
+</html>
